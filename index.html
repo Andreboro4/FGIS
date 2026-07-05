@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<title>РуГрейн — ФГИС Помощник</title>
+<title>Помощник по ФГИС</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
   :root {
@@ -18,9 +18,22 @@
     --red: #e53935; --red-bg: #ffebee;
     --blue: #1e88e5; --blue-bg: #e3f2fd;
     --brown: #795548; --brown-bg: #efebe9;
+    --purple: #7b1fa2; --purple-bg: #f3e5f5;
     --radius-sm: 8px; --radius: 12px; --radius-lg: 16px; --radius-xl: 20px;
     --shadow: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.08); --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
   }
+  [data-theme="dark"] {
+    --bg: #14191f; --bg-white: #1c232b; --bg-card: #1c232b; --bg-hover: #242c35;
+    --border: #2c3844; --border-light: #242c35; --text: #eef1f4;
+    --text-secondary: #a8b3bd; --text-muted: #74808c;
+    --green-bg: rgba(124,179,66,0.16); --yellow-bg: rgba(249,168,37,0.16); --orange-bg: rgba(245,124,0,0.16);
+    --red-bg: rgba(229,57,53,0.18); --blue-bg: rgba(30,136,229,0.18); --brown-bg: rgba(121,85,72,0.2); --purple-bg: rgba(123,31,162,0.2);
+    --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-md: 0 4px 12px rgba(0,0,0,0.3); --shadow-lg: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  [data-theme="dark"] .login-logo,
+  [data-theme="dark"] .header-logo,
+  [data-theme="dark"] .profile-avatar,
+  [data-theme="dark"] .org-item-avatar { box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
   .login-screen { position: fixed; inset: 0; z-index: 1000; background: var(--bg-white); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; transition: opacity 0.4s, transform 0.4s; }
@@ -38,11 +51,37 @@
   .app.visible { opacity: 1; }
   .header { position: sticky; top: 0; z-index: 100; background: var(--bg-white); border-bottom: 1px solid var(--border); padding: 12px 16px; }
   .header-top { display: flex; align-items: center; justify-content: space-between; }
-  .header-brand { display: flex; align-items: center; gap: 10px; }
-  .header-logo { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--green), var(--yellow)); display: flex; align-items: center; justify-content: center; font-size: 18px; }
-  .header-title { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .header-logo { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--green), var(--yellow)); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .header-title { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .header-org { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; background: var(--green-bg); border: 1px solid rgba(124,179,66,0.2); font-size: 12px; color: var(--green-dark); font-weight: 500; cursor: pointer; transition: all 0.2s; }
   .header-org:hover { background: var(--green-light); }
+
+  /* ── Progress Bar ── */
+  .progress-bar-wrap { padding: 0 16px 12px; }
+  .progress-bar-track { width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--yellow)); border-radius: 4px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+  .progress-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+  /* ── Filters ── */
+  .filter-bar { display: flex; gap: 8px; padding: 0 16px 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--bg-white); color: var(--text-secondary); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap; }
+  .filter-chip:hover { border-color: var(--green); }
+  .filter-chip.active { background: var(--green-bg); border-color: var(--green); color: var(--green-dark); }
+  .filter-chip.urgent.active { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+  .filter-chip.warning.active { background: var(--orange-bg); border-color: var(--orange); color: var(--orange); }
+  .filter-chip.normal.active { background: var(--green-bg); border-color: var(--green); color: var(--green-dark); }
+
+  /* ── Search ── */
+  .search-wrap { padding: 0 16px 12px; position: relative; }
+  .search-input { width: 100%; padding: 10px 14px 10px 36px; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--bg-white); color: var(--text); font-size: 14px; outline: none; transition: all 0.2s; font-family: inherit; }
+  .search-input:focus { border-color: var(--green); }
+  .search-input::placeholder { color: var(--text-muted); }
+  .search-icon { position: absolute; left: 26px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-muted); pointer-events: none; }
+  .search-clear { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--border); border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+  .search-clear.visible { display: flex; }
+
   .modal-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   .modal-overlay.open { opacity: 1; pointer-events: auto; }
   .modal-panel { position: fixed; bottom: 0; left: 0; right: 0; z-index: 310; background: var(--bg-white); border-radius: 24px 24px 0 0; max-height: 70vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); }
@@ -75,7 +114,7 @@
   .section-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
   .section-link { font-size: 13px; color: var(--green-dark); font-weight: 500; cursor: pointer; background: none; border: none; font-family: inherit; }
   .section-link:hover { text-decoration: underline; }
-  .tasks-list { padding: 0 16px 16px; }
+  .tasks-list { padding: 0 16px 100px; }
   .task-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
   .task-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-light); }
   .task-card.urgent { border-left: 3px solid var(--red); }
@@ -87,10 +126,10 @@
   .task-badge.green { background: var(--green-bg); color: var(--green-dark); }
   .task-badge.yellow { background: var(--yellow-bg); color: var(--orange); }
   .task-badge.blue { background: var(--blue-bg); color: var(--blue); }
-  .task-badge.purple { background: #f3e5f5; color: #7b1fa2; }
+  .task-badge.purple { background: var(--purple-bg); color: var(--purple); }
   .task-badge.brown { background: var(--brown-bg); color: var(--brown); }
   .task-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .task-meta { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+  .task-meta { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
   .task-meta-item { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
   .task-meta-item.urgent { color: var(--red); font-weight: 600; }
   .task-meta-item.warning { color: var(--orange); font-weight: 600; }
@@ -114,7 +153,7 @@
   .route-card:hover { box-shadow: var(--shadow); border-color: var(--border-light); }
   .route-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
   .route-card-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
-  .route-card-meta { display: flex; gap: 10px; margin-top: 8px; }
+  .route-card-meta { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
   .route-card-tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 90; background: var(--bg-white); border-top: 1px solid var(--border); padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); display: flex; justify-content: space-around; }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 16px; cursor: pointer; transition: all 0.2s; color: var(--text-muted); border: none; background: none; font-family: inherit; position: relative; }
@@ -122,20 +161,23 @@
   .nav-item .nav-icon { font-size: 22px; line-height: 1; }
   .nav-item .nav-label { font-size: 10px; font-weight: 500; }
   .nav-badge { position: absolute; top: 2px; right: 8px; width: 16px; height: 16px; border-radius: 50%; background: var(--red); color: white; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-  .chat-container { display: flex; flex-direction: column; height: calc(100vh - 140px); padding: 0 16px; }
-  .chat-messages { flex: 1; overflow-y: auto; padding: 8px 0; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ── Chat fixed scroll ── */
+  .chat-container { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 0 16px; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 8px 0; display: flex; flex-direction: column; gap: 12px; min-height: 0; overscroll-behavior-y: contain; }
   .chat-message { max-width: 85%; padding: 12px 14px; border-radius: var(--radius-lg); font-size: 14px; line-height: 1.5; }
   .chat-message.user { align-self: flex-end; background: linear-gradient(135deg, var(--green), var(--green-dark)); color: white; border-bottom-right-radius: 4px; }
   .chat-message.ai { align-self: flex-start; background: var(--bg-card); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
   .chat-message.ai .ai-label { font-size: 11px; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; }
-  .chat-input-wrap { display: flex; gap: 8px; padding: 12px 0 20px; border-top: 1px solid var(--border); }
+  .chat-input-wrap { display: flex; gap: 8px; padding: 12px 0 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
   .chat-input { flex: 1; padding: 12px 16px; border-radius: var(--radius-lg); border: 1.5px solid var(--border); background: var(--bg-white); color: var(--text); font-size: 15px; outline: none; font-family: inherit; transition: all 0.2s; }
   .chat-input:focus { border-color: var(--green); }
   .chat-send { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--green), var(--green-dark)); border: none; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
   .chat-send:active { transform: scale(0.95); }
-  .chat-suggestions { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 0; }
+  .chat-suggestions { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 0; flex-shrink: 0; }
   .chat-suggestion { padding: 8px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--bg-white); color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: inherit; }
   .chat-suggestion:hover { border-color: var(--green); color: var(--green-dark); }
+
   .detail-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.3); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   .detail-overlay.open { opacity: 1; pointer-events: auto; }
   .detail-panel { position: fixed; bottom: 0; left: 0; right: 0; z-index: 210; background: var(--bg-white); border-radius: 24px 24px 0 0; border-top: 1px solid var(--border); max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); }
@@ -158,7 +200,7 @@
   .detail-condition.branch { background: var(--yellow-bg); border-color: rgba(249,168,37,0.3); color: var(--orange); }
   .detail-condition.validation { background: var(--red-bg); border-color: rgba(229,57,53,0.3); color: var(--red); }
   .detail-condition.info { background: var(--blue-bg); border-color: rgba(30,136,229,0.3); color: var(--blue); }
-  .detail-condition.dependency { background: #f3e5f5; border-color: rgba(123,31,162,0.3); color: #7b1fa2; }
+  .detail-condition.dependency { background: var(--purple-bg); border-color: rgba(123,31,162,0.3); color: var(--purple); }
   .detail-condition ul { margin-top: 6px; padding-left: 16px; }
   .detail-condition li { margin-bottom: 3px; }
   .detail-btn { width: 100%; padding: 14px; border-radius: var(--radius); border: none; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 6px; transition: all 0.2s; font-family: inherit; }
@@ -170,6 +212,7 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
+  #tabChat.tab-content.active { display: flex; flex-direction: column; height: 100vh; padding-bottom: 60px; }
   .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
   .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
   .empty-state h3 { font-size: 16px; color: var(--text); margin-bottom: 6px; }
@@ -183,8 +226,8 @@
 
 <div class="login-screen" id="loginScreen">
   <div class="login-logo">🌾</div>
-  <div class="login-title">РуГрейн</div>
-  <div class="login-subtitle">ФГИС Помощник для аграриев</div>
+  <div class="login-title">Помощник по ФГИС</div>
+  <div class="login-subtitle">ЕФГИС ЗСН, ФГИС «Зерно», «Семеноводство» и «Сатурн» — в одном приложении</div>
   <button class="login-btn" onclick="handleLogin()">
     <span>📱</span> Войти через Telegram
   </button>
@@ -197,7 +240,7 @@
     <div class="header-top">
       <div class="header-brand">
         <div class="header-logo">🌾</div>
-        <div class="header-title">РуГрейн</div>
+        <div class="header-title">Помощник по ФГИС</div>
       </div>
       <div class="header-org" id="headerOrg" onclick="openOrgSelector()">
         <span>🏢</span> <span id="orgNameShort">Организация</span>
@@ -219,6 +262,35 @@
       <h2 class="section-title">📋 Текущие задачи</h2>
       <button class="section-link" onclick="switchTab('route')">Весь маршрут →</button>
     </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-wrap" id="progressBarWrap">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressBarFill" style="width:0%"></div>
+      </div>
+      <div class="progress-bar-label">
+        <span id="progressBarText">0 из 0 выполнено</span>
+        <span id="progressBarPercent">0%</span>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="taskSearch" placeholder="Поиск по задачам..." oninput="handleSearch(this.value)">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar" id="taskFilters">
+      <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">Все</button>
+      <button class="filter-chip" data-filter="stage" onclick="toggleStageFilter()">📍 Система ▾</button>
+      <button class="filter-chip" data-filter="deadline" onclick="toggleDeadlineFilter()">📅 Срок ▾</button>
+      <button class="filter-chip urgent" data-filter="priority" onclick="setFilter('priority', 'urgent')">🔴 Срочно</button>
+      <button class="filter-chip" data-filter="required" onclick="setFilter('required')">⚡ Обязательное</button>
+      <button class="filter-chip" data-filter="recommended" onclick="setFilter('recommended')">💡 Рекомендуемое</button>
+    </div>
+
     <div class="tasks-list" id="tasksList"></div>
   </div>
 
@@ -237,9 +309,11 @@
     <div class="chat-container">
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-suggestions" id="chatSuggestions">
-        <button class="chat-suggestion" onclick="sendSuggestion('Какие у меня текущие задачи?')">Какие у меня задачи?</button>
-        <button class="chat-suggestion" onclick="sendSuggestion('Что нужно для регистрации в ФГИС Зерно?')">ФГИС Зерно</button>
-        <button class="chat-suggestion" onclick="sendSuggestion('Какие документы нужны для субсидии?')">Документы на субсидию</button>
+        <button class="chat-suggestion" onclick="sendSuggestion('Какие у меня текущие задачи?')">Мои задачи</button>
+        <button class="chat-suggestion" onclick="sendSuggestion('Что делать в ЕФГИС ЗСН?')">ЕФГИС ЗСН</button>
+        <button class="chat-suggestion" onclick="sendSuggestion('Как сформировать партию во ФГИС Зерно?')">ФГИС Зерно</button>
+        <button class="chat-suggestion" onclick="sendSuggestion('Как оформить апробацию семян?')">Семеноводство</button>
+        <button class="chat-suggestion" onclick="sendSuggestion('Как сделать план применения в Сатурне?')">ФГИС Сатурн</button>
       </div>
       <div class="chat-input-wrap">
         <input type="text" class="chat-input" id="chatInput" placeholder="Задайте вопрос..." onkeypress="if(event.key==='Enter')sendChat()">
@@ -300,6 +374,22 @@
     </div>
     <button class="form-btn" onclick="addOrganization()">Добавить</button>
   </div>
+</div>
+
+<!-- Stage Filter Modal -->
+<div class="modal-overlay" id="stageFilterOverlay" onclick="closeStageFilter()"></div>
+<div class="modal-panel" id="stageFilterPanel">
+  <div class="modal-handle"></div>
+  <div class="modal-title">📍 Фильтр по системе</div>
+  <div id="stageFilterList"></div>
+</div>
+
+<!-- Deadline Filter Modal -->
+<div class="modal-overlay" id="deadlineFilterOverlay" onclick="closeDeadlineFilter()"></div>
+<div class="modal-panel" id="deadlineFilterPanel">
+  <div class="modal-handle"></div>
+  <div class="modal-title">📅 Фильтр по сроку</div>
+  <div id="deadlineFilterList"></div>
 </div>
 
 <div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
